@@ -1,14 +1,10 @@
-import os
-from airflow import DAG
 from airflow.utils.dates import datetime
-from airflow.decorators import task
+from airflow.decorators import dag, task
 from airflow.models.baseoperator import chain
 
-from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.providers.common.sql.operators.sql import SQLColumnCheckOperator
 
-import pandas as pd
 import seaborn as sns
 
 CREATE_DB_CONN_ID = "cratedb_connection"
@@ -30,14 +26,14 @@ def transform_data(dataset):
     return tips_final.values.tolist()
 
 
-with DAG(
-    "etl-pipeline",
+@dag(
     description="ETL Pipeline demo",
     start_date=datetime(2023, 1, 1),
     schedule=None,
     catchup=False,
     template_searchpath=["include/"],
-) as dag:
+)
+def etl_pipeline():
     create_table = SQLExecuteQueryOperator(
         task_id="create_tips_table",
         conn_id=CREATE_DB_CONN_ID,
