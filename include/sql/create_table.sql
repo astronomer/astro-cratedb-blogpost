@@ -1,10 +1,17 @@
-CREATE TABLE IF NOT EXISTS doc.tips (
-  total_bill REAL,
-  tip REAL,
+CREATE TABLE IF NOT EXISTS doc.possum (
+  case_num INT,
+  site INT,
+  pop TEXT,
   sex TEXT,
-  smoker TEXT,
-  day TEXT,
-  time TEXT,
-  size INT,
-  total_paid REAL
+  age INT,
+  hdlngth REAL,
+  skullw REAL,
+  totlngth REAL,
+  taill REAL,
+  footlgth REAL,
+  earconch REAL,
+  eye REAL,
+  chest REAL,
+  belly REAL
+
   );
