@@ -71,4 +71,5 @@ def etl_pipeline():
         },
     )
 
+etl_pipeline()
     chain(create_table, extract, transform, load_data, data_check, select_data)
