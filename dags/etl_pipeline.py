@@ -8,10 +8,6 @@ from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.providers.common.sql.operators.sql import SQLColumnCheckOperator
 
 CRATE_DB_CONN_ID = "cratedb_connection"
-AWS_S3_BUCKET = os.getenv("AWS_S3_BUCKET")
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-key="possum/possum.csv"
 
 
 @task
