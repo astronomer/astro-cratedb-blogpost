@@ -16,12 +16,8 @@ key="possum/possum.csv"
 
 @task
 def extract_data():
-    possum = pd.read_csv(   
-    f"s3://{AWS_S3_BUCKET}/{key}",
-    storage_options={
-        "key": AWS_ACCESS_KEY_ID,
-        "secret": AWS_SECRET_ACCESS_KEY
-    })
+    url = "https://raw.githubusercontent.com/astronomer/learn-tutorials-data/main/possum.csv"
+    possum = pd.read_csv(url)
     return possum
 
 
