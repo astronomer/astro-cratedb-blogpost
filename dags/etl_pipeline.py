@@ -67,7 +67,7 @@ def etl_pipeline():
         conn_id=CRATE_DB_CONN_ID,
         table="doc.possum",
         column_mapping={
-            "total_paid": {"age": {"geq_to": 0}},
+            "age": {"min": {"geq_to": 0}},
         },
     )
 
