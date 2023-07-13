@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS doc.possum (
-  case INT,
+  case_num INT,
   site INT,
   pop TEXT,
   sex TEXT,
