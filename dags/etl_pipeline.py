@@ -51,7 +51,7 @@ def etl_pipeline():
     select_data = SQLExecuteQueryOperator(
         task_id="select_data",
         conn_id=CRATE_DB_CONN_ID,
-        sql="SELECT AVG(age) FROM doc.possum",
+        sql="sql/select.sql",
     )
 
     data_check = SQLColumnCheckOperator(
