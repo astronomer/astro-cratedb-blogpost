@@ -1,4 +1,4 @@
-SELECT sex, population, AVG(weight) AS average_weight
-FROM possum
-GROUP BY sex, population
-ORDER BY average_weight DESC;
+SELECT sex, pop, AVG(taill) AS average_tail_length
+FROM doc.possum
+GROUP BY sex, pop
+ORDER BY average_tail_length DESC;
