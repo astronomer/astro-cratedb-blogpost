@@ -1,0 +1,8 @@
+# These categories will be applied to all DAGs in the repo.
+categories:
+  - ETL/ELT
+  - Databases
+  - Data Quality
+# List of DAGs that should be published to the Astronomer Registry.
+dags:
+  - path: dags/etl_pipeline.py
