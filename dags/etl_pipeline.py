@@ -81,7 +81,15 @@ def etl_pipeline():
     @task
     def print_selected_data(**context):
         selected_data = context["ti"].xcom_pull(task_ids="select_data")
-        print(selected_data)
+        for i in selected_data:
+            possum_sex = "Female" if i[0] == "f" else "Male"
+            possum_pop = (
+                "Victoria" if i[1] == "Vic" else "New South Wales and Queensland"
+            )
+            tail_l = i[2]
+            print(
+                f"{possum_sex} possums of the {possum_pop} population had an average tail length of {tail_l} cm."
+            )
 
     chain(
         create_table,
