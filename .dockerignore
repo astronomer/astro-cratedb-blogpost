@@ -3,3 +3,5 @@ astro
 .env
 airflow_settings.yaml
 logs/
+__pychache__ 
+.DS_Store
