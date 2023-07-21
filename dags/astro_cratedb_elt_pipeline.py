@@ -46,7 +46,7 @@ def transform_data(dataset):
     catchup=False,
     template_searchpath=["include/"],
 )
-def etl_pipeline():
+def astro_cratedb_elt_pipeline():
     create_table = SQLExecuteQueryOperator(
         task_id="create_table",
         conn_id=CRATE_DB_CONN_ID,
@@ -102,4 +102,4 @@ def etl_pipeline():
     )
 
 
-etl_pipeline()
+astro_cratedb_elt_pipeline()
