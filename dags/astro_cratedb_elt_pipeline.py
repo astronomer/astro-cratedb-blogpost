@@ -15,28 +15,45 @@ Define the connection to CrateDB as an environment variable in the format:
 AIRFLOW_CONN_CRATEDB_CONNECTION = "postgres://<your-user>:<your-password>@<your-host>:<your-port>/?sslmode=<your-ssl-mode>"
 """
 
-from airflow.decorators import dag, task
+from airflow.decorators import dag, task_group, task
 from airflow.models.baseoperator import chain
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.providers.common.sql.operators.sql import SQLColumnCheckOperator
 from airflow.utils.dates import datetime
 import pandas as pd
+import requests
 
 CRATE_DB_CONN_ID = "cratedb_connection"
+GH_API_URL = "https://api.github.com/repos/astronomer/learn-tutorials-data"
+GH_CONTENT_URL = "https://raw.githubusercontent.com/astronomer/learn-tutorials-data"
+GH_FOLDER_PATH = "/possum_partial"
 
 
 @task
-def extract_data():
-    url = "https://raw.githubusercontent.com/astronomer/learn-tutorials-data/main/possum.csv"
-    possum = pd.read_csv(url)
-    return possum
+def get_file_names(base_url, folder_path):
+    "Get the names of all files in a folder in a GitHub repo."
+    folder_url = base_url + "/contents" + folder_path
+    response = requests.get(folder_url)
+    files = response.json()
+    file_names = [file["name"] for file in files]
+    return file_names
 
 
-# remove rows with empty column
+@task
+def extract_data(base_url, folder_path, file_name):
+    """Extract the contents of a CSV file in a GitHub repo
+    and return a pandas DataFrame."""
+    file_url = base_url + "/main" + folder_path + f"/{file_name}"
+    possum_data = pd.read_csv(file_url)
+    return possum_data
+
+
 @task
 def transform_data(dataset):
+    """Transform the data by dropping rows with missing values.
+    Return a tuple of lists of column values."""
     possum_final = dataset.dropna()
-    return possum_final.values.tolist()
+    return tuple(possum_final.to_dict(orient="list").values())
 
 
 @dag(
@@ -53,18 +70,35 @@ def astro_cratedb_elt_pipeline():
         sql="sql/create_table.sql",
     )
 
-    extract = extract_data()
+    file_names = get_file_names(base_url=GH_API_URL, folder_path=GH_FOLDER_PATH)
+    create_table >> file_names
 
-    transform = transform_data(extract)
+    @task_group
+    def extract_to_load(base_url, folder_path, file_name):
+        """Extract data from a CSV file in a GitHub repo, transform it and
+        load it into CrateDB."""
 
-    load_data = SQLExecuteQueryOperator.partial(
-        task_id="load_data",
-        conn_id=CRATE_DB_CONN_ID,
-        sql="sql/insert_data.sql",
-    ).expand(parameters=transform)
+        extracted_data = extract_data(
+            base_url=base_url, folder_path=folder_path, file_name=file_name
+        )
+
+        transformed_data = transform_data(dataset=extracted_data)
+
+        SQLExecuteQueryOperator(
+            task_id="load_data",
+            conn_id=CRATE_DB_CONN_ID,
+            sql="sql/insert_data.sql",
+            parameters=transformed_data,
+        )
+
+    # dynamically map the task group over the list of file names, creating
+    # one task group for each file
+    extract_to_load_tg = extract_to_load.partial(
+        base_url=GH_CONTENT_URL, folder_path=GH_FOLDER_PATH
+    ).expand(file_name=file_names)
 
     data_check = SQLColumnCheckOperator(
-        task_id="value_check",
+        task_id="data_check",
         conn_id=CRATE_DB_CONN_ID,
         table="doc.possum",
         column_mapping={
@@ -80,6 +114,8 @@ def astro_cratedb_elt_pipeline():
 
     @task
     def print_selected_data(**context):
+        """Print the results of the upstream query to the logs
+        in a pretty format."""
         selected_data = context["ti"].xcom_pull(task_ids="select_data")
         for i in selected_data:
             possum_sex = "Female" if i[0] == "f" else "Male"
@@ -92,10 +128,7 @@ def astro_cratedb_elt_pipeline():
             )
 
     chain(
-        create_table,
-        extract,
-        transform,
-        load_data,
+        extract_to_load_tg,
         data_check,
         select_data,
         print_selected_data(),
