@@ -1,5 +1,5 @@
 """
-## Run an ETL pipeline with CrateDB and data quality checks
+## Dynamically map task groups to create an ETL pipeline with CrateDB
 
 This DAG runs an ETL pipeline using the [CrateDB](https://crate.io/) database.
 The DAG will:
